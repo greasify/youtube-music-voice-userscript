@@ -2,12 +2,12 @@
 
 English and Russian voice commands on [YouTube Music](https://music.youtube.com) via `SpeechRecognition` (`webkitSpeechRecognition` in Chromium).
 
+> [!WARNING]
+> Chrome / Edge only. Firefox has no [SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition) API.
+
 ## Install userscript
 
 > [youtube-music-voice-userscript.user.js](https://greasify.github.io/youtube-music-voice-userscript/youtube-music-voice-userscript.user.js)
-
-> [!WARNING]
-> Chrome / Edge only. Firefox has no [SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition) API API.
 
 ## English commands
 

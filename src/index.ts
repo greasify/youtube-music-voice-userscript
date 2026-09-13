@@ -7,7 +7,7 @@ import {
   defaultSpeechLang,
   isSpeechSupported,
 } from './speech'
-import './style.css'
+import './style.scss'
 
 function uiLang(lang: SpeechLang) {
   return lang === 'ru-RU' ? 'ru' : 'en'

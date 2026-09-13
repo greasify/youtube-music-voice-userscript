@@ -1,11 +1,6 @@
 {
   "js/ts.tsdk.path": "./node_modules/typescript/lib",
 
-  // ESLint in the extension host sees Cursor's bundled TS 7 and dies.
-  // Run the language server in Node so require('typescript') is the 6.x shim.
-  "eslint.runtime": "node",
-  "eslint.useFlatConfig": true,
-
   // Format on save
   "prettier.enable": false,
   "editor.formatOnSave": false,

@@ -2,17 +2,12 @@
 
 English and Russian voice commands on [YouTube Music](https://music.youtube.com) via `SpeechRecognition` (`webkitSpeechRecognition` in Chromium).
 
-> **Warn**\
+## Install userscript
+
+> [youtube-music-voice-userscript.user.js](https://greasify.github.io/youtube-music-voice-userscript/youtube-music-voice-userscript.user.js)
+
+> [!WARNING]
 > Chrome / Edge only. Firefox has no [SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition) API API.
-
-`SpeechRecognition` uses one acoustic model at a time. The HUD `EN` / `RU` switch sets `en-US` or `ru-RU` and restarts the session if the mic is already on. Default follows `navigator.language` (`ru*` → `ru-RU`).
-
-```bash
-pnpm dev
-pnpm build
-```
-
-Install the printed **Userscript** URL (`*.user.js`). Open `https://music.youtube.com`, click **Voice** / **Голос**, allow the microphone.
 
 ## English commands
 

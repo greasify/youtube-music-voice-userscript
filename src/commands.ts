@@ -5,10 +5,17 @@ export type VoiceCommand
     | 'pause'
     | 'play'
     | 'prev'
+    | 'setVolume'
     | 'volumeDown'
     | 'volumeUp'
 
-const PHRASES: readonly (readonly [VoiceCommand, readonly string[]])[] = [
+export type ParsedCommand
+  = | { type: Exclude<VoiceCommand, 'setVolume'> }
+    | { type: 'setVolume', level: number }
+
+const VOLUME_SET_RE = /(?:громкость|звук|volume)\s+(?:на\s+|до\s+|to\s+)?(\d{1,3})\b/
+
+const PHRASES: readonly (readonly [Exclude<VoiceCommand, 'setVolume'>, readonly string[]])[] = [
   ['volumeUp', [
     'увеличить громкость',
     'increase volume',
@@ -114,7 +121,7 @@ const PHRASES: readonly (readonly [VoiceCommand, readonly string[]])[] = [
   ]],
 ]
 
-export const COMMAND_LABELS: Record<UiLang, Record<VoiceCommand, string>> = {
+export const COMMAND_LABELS: Record<UiLang, Record<Exclude<VoiceCommand, 'setVolume'>, string>> = {
   en: {
     next: 'Next track',
     pause: 'Pause',
@@ -133,6 +140,14 @@ export const COMMAND_LABELS: Record<UiLang, Record<VoiceCommand, string>> = {
   },
 }
 
+export function commandLabel(lang: UiLang, command: ParsedCommand) {
+  if (command.type === 'setVolume') {
+    return lang === 'ru' ? `Громкость ${command.level}` : `Volume ${command.level}`
+  }
+
+  return COMMAND_LABELS[lang][command.type]
+}
+
 function normalize(transcript: string) {
   return transcript
     .toLowerCase()
@@ -145,13 +160,24 @@ function includesPhrase(text: string, phrase: string) {
   return text === phrase || ` ${text} `.includes(` ${phrase} `)
 }
 
-export function parseCommand(transcript: string): VoiceCommand | null {
+function parseSetVolume(normalized: string): ParsedCommand | null {
+  const match = normalized.match(VOLUME_SET_RE)
+  if (!match) return null
+
+  const level = Math.min(100, Math.max(0, Math.round(Number(match[1]))))
+  return { type: 'setVolume', level }
+}
+
+export function parseCommand(transcript: string): ParsedCommand | null {
   const normalized = normalize(transcript)
   if (!normalized) return null
 
+  const setVolume = parseSetVolume(normalized)
+  if (setVolume) return setVolume
+
   for (const [command, phrases] of PHRASES) {
     if (phrases.some(phrase => includesPhrase(normalized, phrase))) {
-      return command
+      return { type: command }
     }
   }
 

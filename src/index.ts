@@ -1,5 +1,5 @@
 import type { SpeechController, SpeechLang } from './speech'
-import { COMMAND_LABELS, parseCommand } from './commands'
+import { commandLabel, parseCommand } from './commands'
 import { createHud, mountHud } from './hud'
 import { applyCommand } from './player'
 import {
@@ -56,7 +56,6 @@ function bootstrap() {
       hud.setStatus(listening ? 'listening' : 'idle')
     },
     onResult: (transcript) => {
-      const labels = COMMAND_LABELS[uiLang(lang)]
       const command = parseCommand(transcript)
       if (!command) {
         hud.showToast(lang === 'ru-RU' ? `Слышу: ${transcript}` : `Heard: ${transcript}`)
@@ -64,7 +63,7 @@ function bootstrap() {
       }
 
       const ok = applyCommand(command)
-      const label = labels[command]
+      const label = commandLabel(uiLang(lang), command)
       if (ok) {
         hud.showToast(label)
         return

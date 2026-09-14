@@ -1,4 +1,4 @@
-import type { VoiceCommand } from './commands'
+import type { ParsedCommand } from './commands'
 
 type VolumeSlider = HTMLElement & {
   value?: number
@@ -104,12 +104,12 @@ function readSliderValue(slider: VolumeSlider) {
   return Number.isFinite(fromAttr) ? fromAttr : 50
 }
 
-function adjustVolume(delta: number) {
+function writeVolume(level: number) {
+  const next = Math.min(100, Math.max(0, Math.round(level)))
   const slider = selectVolumeSlider()
   const video = selectVideo()
 
   if (slider) {
-    const next = Math.min(100, Math.max(0, readSliderValue(slider) + delta))
     slider.value = next
     slider.setAttribute('value', String(next))
     slider.setAttribute('aria-valuenow', String(next))
@@ -120,13 +120,23 @@ function adjustVolume(delta: number) {
 
   if (!video) return false
 
-  video.volume = Math.min(1, Math.max(0, video.volume + delta / 100))
+  video.volume = next / 100
   if (video.volume > 0) video.muted = false
   return true
 }
 
-export function applyCommand(command: VoiceCommand): boolean {
-  switch (command) {
+function adjustVolume(delta: number) {
+  const slider = selectVolumeSlider()
+  if (slider) return writeVolume(readSliderValue(slider) + delta)
+
+  const video = selectVideo()
+  if (!video) return false
+
+  return writeVolume(video.volume * 100 + delta)
+}
+
+export function applyCommand(command: ParsedCommand) {
+  switch (command.type) {
     case 'next':
       return clickFirst(['.next-button', '[aria-label="Next"]', '[title="Next"]'])
     case 'pause':
@@ -135,6 +145,8 @@ export function applyCommand(command: VoiceCommand): boolean {
       return play()
     case 'prev':
       return clickFirst(['.previous-button', '[aria-label="Previous"]', '[title="Previous"]'])
+    case 'setVolume':
+      return writeVolume(command.level)
     case 'volumeDown':
       return adjustVolume(-VOLUME_STEP)
     case 'volumeUp':

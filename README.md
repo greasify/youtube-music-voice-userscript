@@ -19,6 +19,7 @@ English and Russian voice commands on [YouTube Music](https://music.youtube.com)
 | `play`, `resume`, `start`, `unpause` | Play |
 | `volume up`, `louder`, `turn it up` | Volume +10 |
 | `volume down`, `quieter`, `turn it down` | Volume -10 |
+| `volume 50`, `volume to 80` | Set volume 0–100 |
 
 ## Russian commands
 
@@ -30,3 +31,4 @@ English and Russian voice commands on [YouTube Music](https://music.youtube.com)
 | `играй`, `включи`, `продолжи`, `поехали` | Play |
 | `громче`, `погромче`, `прибавь` | Громкость +10 |
 | `тише`, `потише`, `убавь` | Громкость −10 |
+| `громкость 32`, `звук 50` | Выставить уровень 0–100 |

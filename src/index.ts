@@ -1,5 +1,6 @@
 import type { SpeechController, SpeechLang } from './speech'
 import { commandLabel, parseCommand } from './commands'
+import { playLikeFeedback, resumeFeedback } from './feedback'
 import { createHud, mountHud } from './hud'
 import { applyCommand } from './player'
 import {
@@ -30,6 +31,7 @@ function bootstrap() {
         speech.stop()
         return
       }
+      resumeFeedback()
       speech.start()
     },
   })
@@ -62,9 +64,19 @@ function bootstrap() {
         return
       }
 
-      const ok = applyCommand(command)
+      const result = applyCommand(command)
       const label = commandLabel(uiLang(lang), command)
-      if (ok) {
+
+      if (command.type === 'like') {
+        if (result.ok) {
+          playLikeFeedback(Boolean(result.already))
+          return
+        }
+        hud.showToast(lang === 'ru-RU' ? `Не вышло: ${label}` : `Failed: ${label}`)
+        return
+      }
+
+      if (result.ok) {
         hud.showToast(label)
         return
       }

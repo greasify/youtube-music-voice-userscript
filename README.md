@@ -20,6 +20,7 @@ English and Russian voice commands on [YouTube Music](https://music.youtube.com)
 | `volume up`, `louder`, `turn it up` | Volume +10 |
 | `volume down`, `quieter`, `turn it down` | Volume -10 |
 | `volume 50`, `volume to 80` | Set volume 0–100 |
+| `like`, `like this`, `favorite` | Like current track if not liked (unlike by hand only) |
 
 ## Russian commands
 
@@ -32,3 +33,4 @@ English and Russian voice commands on [YouTube Music](https://music.youtube.com)
 | `громче`, `погромче`, `прибавь` | Громкость +10 |
 | `тише`, `потише`, `убавь` | Громкость −10 |
 | `громкость 32`, `звук 50` | Выставить уровень 0–100 |
+| `лайк`, `нравится`, `в избранное` | Лайк, если ещё нет (снять только руками) |

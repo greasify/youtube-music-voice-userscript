@@ -1,7 +1,8 @@
 export type UiLang = 'en' | 'ru'
 
 export type VoiceCommand
-  = | 'next'
+  = | 'like'
+    | 'next'
     | 'pause'
     | 'play'
     | 'prev'
@@ -43,6 +44,18 @@ const PHRASES: readonly (readonly [Exclude<VoiceCommand, 'setVolume'>, readonly 
     'quieter',
     'убавь',
     'тише',
+  ]],
+  ['like', [
+    'в избранное',
+    'в любимое',
+    'like this',
+    'love this',
+    'нравится',
+    'favorite',
+    'лайкни',
+    'heart',
+    'лайк',
+    'like',
   ]],
   ['next', [
     'следующую песню',
@@ -123,6 +136,7 @@ const PHRASES: readonly (readonly [Exclude<VoiceCommand, 'setVolume'>, readonly 
 
 export const COMMAND_LABELS: Record<UiLang, Record<Exclude<VoiceCommand, 'setVolume'>, string>> = {
   en: {
+    like: 'Like',
     next: 'Next track',
     pause: 'Pause',
     play: 'Play',
@@ -131,6 +145,7 @@ export const COMMAND_LABELS: Record<UiLang, Record<Exclude<VoiceCommand, 'setVol
     volumeUp: 'Volume up',
   },
   ru: {
+    like: 'Лайк',
     next: 'Следующий трек',
     pause: 'Пауза',
     play: 'Играть',

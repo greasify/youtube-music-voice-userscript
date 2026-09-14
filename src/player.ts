@@ -1,5 +1,14 @@
 import type { ParsedCommand } from './commands'
 
+export type ApplyResult = {
+  already?: boolean
+  ok: boolean
+}
+
+type LikeRenderer = HTMLElement & {
+  likeStatus?: string
+}
+
 type VolumeSlider = HTMLElement & {
   value?: number
 }
@@ -135,21 +144,56 @@ function adjustVolume(delta: number) {
   return writeVolume(video.volume * 100 + delta)
 }
 
-export function applyCommand(command: ParsedCommand) {
+function selectLikeRenderer() {
+  const bar = selectPlayerBar()
+  return bar?.querySelector<LikeRenderer>('ytmusic-like-button-renderer')
+    ?? document.querySelector<LikeRenderer>('ytmusic-like-button-renderer')
+}
+
+function isLiked(renderer: LikeRenderer) {
+  const status = (renderer.getAttribute('like-status') ?? renderer.likeStatus ?? '').toUpperCase()
+  return status === 'LIKE'
+}
+
+function like(): ApplyResult {
+  const renderer = selectLikeRenderer()
+  if (!renderer) return { ok: false }
+  if (isLiked(renderer)) return { already: true, ok: true }
+
+  const scopes: ParentNode[] = [renderer]
+  const bar = selectPlayerBar()
+  if (bar) scopes.push(bar)
+  scopes.push(document)
+
+  for (const scope of scopes) {
+    for (const selector of ['#button-shape-like button', '#like-button button', '#like-button']) {
+      const el = scope.querySelector<HTMLElement>(selector)
+      if (!el) continue
+      clickHost(el)
+      return { ok: true }
+    }
+  }
+
+  return { ok: false }
+}
+
+export function applyCommand(command: ParsedCommand): ApplyResult {
   switch (command.type) {
+    case 'like':
+      return like()
     case 'next':
-      return clickFirst(['.next-button', '[aria-label="Next"]', '[title="Next"]'])
+      return { ok: clickFirst(['.next-button', '[aria-label="Next"]', '[title="Next"]']) }
     case 'pause':
-      return pause()
+      return { ok: pause() }
     case 'play':
-      return play()
+      return { ok: play() }
     case 'prev':
-      return clickFirst(['.previous-button', '[aria-label="Previous"]', '[title="Previous"]'])
+      return { ok: clickFirst(['.previous-button', '[aria-label="Previous"]', '[title="Previous"]']) }
     case 'setVolume':
-      return writeVolume(command.level)
+      return { ok: writeVolume(command.level) }
     case 'volumeDown':
-      return adjustVolume(-VOLUME_STEP)
+      return { ok: adjustVolume(-VOLUME_STEP) }
     case 'volumeUp':
-      return adjustVolume(VOLUME_STEP)
+      return { ok: adjustVolume(VOLUME_STEP) }
   }
 }

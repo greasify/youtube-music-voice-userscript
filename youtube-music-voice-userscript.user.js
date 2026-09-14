@@ -2,17 +2,21 @@
 // @name        youtube-music-voice-userscript
 // @version     0.0.0
 // @description Voice control for YouTube Music: next, previous, pause, play, volume.
+// @homepage    https://greasify.github.io/youtube-music-voice-userscript/
 // @match       https://music.youtube.com/*
 // @noframes    
+// @updateURL   https://greasify.github.io/youtube-music-voice-userscript/youtube-music-voice-userscript.meta.js
+// @downloadURL https://greasify.github.io/youtube-music-voice-userscript/youtube-music-voice-userscript.user.js
 // ==/UserScript==
 
 (function (css) {
   var style = document.createElement('style')
   style.textContent = css
   ;(document.head || document.documentElement).appendChild(style)
-})(".ymv-root {\n  display: flex;\n  position: relative;\n  flex: 0 0 auto;\n  flex-direction: column;\n  align-items: flex-start;\n  z-index: 3;\n  margin-inline: 0 8px;\n  pointer-events: none;\n  font-family: 'YouTube Sans', Roboto, sans-serif;\n}\n\n.ymv-root .ymv-row {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  pointer-events: auto;\n}\n\n.ymv-root .ymv-mic,\n.ymv-root .ymv-lang {\n  all: unset;\n  display: inline-flex;\n  justify-content: center;\n  align-items: center;\n  cursor: pointer;\n  box-sizing: border-box;\n  background: #212121;\n  color: #fff;\n  font-weight: 600;\n  line-height: 1;\n  font-family: inherit;\n  letter-spacing: 0.02em;\n}\n\n.ymv-root .ymv-mic {\n  border-radius: 18px;\n  padding: 0 12px;\n  min-width: 88px;\n  height: 36px;\n  font-size: 13px;\n}\n\n.ymv-root .ymv-lang {\n  border-radius: 18px;\n  padding: 0 8px;\n  min-width: 36px;\n  height: 36px;\n  font-size: 12px;\n}\n\n.ymv-root .ymv-lang:hover,\n.ymv-root .ymv-mic:hover {\n  background: #303030;\n}\n\n.ymv-root .ymv-lang[aria-pressed='true'] {\n  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 35%);\n  background: #3d3d3d;\n}\n\n.ymv-root[data-status='listening'] .ymv-mic {\n  animation: ymv-pulse 1.6s ease-in-out infinite;\n  background: #f00;\n}\n\n.ymv-root[data-status='error'] .ymv-mic {\n  background: #8b1e1e;\n}\n\n.ymv-root .ymv-toast {\n  position: absolute;\n  top: calc(100% + 6px);\n  left: 0;\n  transform: translateY(4px);\n  opacity: 0;\n  transition:\n    opacity 0.2s ease,\n    transform 0.2s ease;\n  border-radius: 8px;\n  background: rgb(33 33 33 / 92%);\n  padding: 8px 12px;\n  max-width: 240px;\n  pointer-events: none;\n  color: #fff;\n  font-size: 13px;\n  line-height: 1.3;\n  white-space: nowrap;\n}\n\n.ymv-root .ymv-toast[data-visible='true'] {\n  transform: translateY(0);\n  opacity: 1;\n}\n\n@keyframes ymv-pulse {\n  50% {\n    box-shadow: 0 0 0 6px rgb(255 0 0 / 25%);\n  }\n}\n");
+})(".ymv-root {\n  display: flex;\n  position: relative;\n  flex: 0 0 auto;\n  flex-direction: column;\n  align-items: flex-start;\n  z-index: 3;\n  margin-inline: 0 8px;\n  pointer-events: none;\n  font-family: \"YouTube Sans\", Roboto, sans-serif;\n}\n.ymv-root .ymv-row {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  pointer-events: auto;\n}\n.ymv-root .ymv-mic, .ymv-root .ymv-lang {\n  all: unset;\n  display: inline-flex;\n  justify-content: center;\n  align-items: center;\n  cursor: pointer;\n  box-sizing: border-box;\n  background: #212121;\n  color: #fff;\n  font-weight: 600;\n  line-height: 1;\n  font-family: inherit;\n  letter-spacing: 0.02em;\n}\n.ymv-root .ymv-mic:hover, .ymv-root .ymv-lang:hover {\n  background: #303030;\n}\n.ymv-root .ymv-mic {\n  border-radius: 18px;\n  padding: 0 12px;\n  min-width: 88px;\n  height: 36px;\n  font-size: 13px;\n}\n.ymv-root .ymv-lang {\n  border-radius: 18px;\n  padding: 0 8px;\n  min-width: 36px;\n  height: 36px;\n  font-size: 12px;\n}\n.ymv-root .ymv-lang[aria-pressed=true] {\n  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);\n  background: #3d3d3d;\n}\n.ymv-root .ymv-toast {\n  position: absolute;\n  top: calc(100% + 6px);\n  left: 0;\n  transform: translateY(4px);\n  opacity: 0;\n  transition: opacity 0.2s ease, transform 0.2s ease;\n  border-radius: 8px;\n  background: rgba(33, 33, 33, 0.92);\n  padding: 8px 12px;\n  max-width: 240px;\n  pointer-events: none;\n  color: #fff;\n  font-size: 13px;\n  line-height: 1.3;\n  white-space: nowrap;\n}\n.ymv-root .ymv-toast[data-visible=true] {\n  transform: translateY(0);\n  opacity: 1;\n}\n.ymv-root[data-status=listening] .ymv-mic {\n  animation: ymv-pulse 1.6s ease-in-out infinite;\n  background: #f00;\n}\n.ymv-root[data-status=error] .ymv-mic {\n  background: #8b1e1e;\n}\n\n@keyframes ymv-pulse {\n  50% {\n    box-shadow: 0 0 0 6px rgba(255, 0, 0, 0.25);\n  }\n}");
 (function () {
 //#region src/commands.ts
+var VOLUME_SET_RE = /(?:громкость|звук|volume)\s+(?:на\s+|до\s+|to\s+)?(\d{1,3})\b/;
 var PHRASES = [
 	["volumeUp", [
 		"увеличить громкость",
@@ -41,6 +45,18 @@ var PHRASES = [
 		"quieter",
 		"убавь",
 		"тише"
+	]],
+	["like", [
+		"в избранное",
+		"в любимое",
+		"like this",
+		"love this",
+		"нравится",
+		"favorite",
+		"лайкни",
+		"heart",
+		"лайк",
+		"like"
 	]],
 	["next", [
 		"следующую песню",
@@ -120,6 +136,7 @@ var PHRASES = [
 ];
 var COMMAND_LABELS = {
 	en: {
+		like: "Like",
 		next: "Next track",
 		pause: "Pause",
 		play: "Play",
@@ -128,6 +145,7 @@ var COMMAND_LABELS = {
 		volumeUp: "Volume up"
 	},
 	ru: {
+		like: "Лайк",
 		next: "Следующий трек",
 		pause: "Пауза",
 		play: "Играть",
@@ -136,17 +154,68 @@ var COMMAND_LABELS = {
 		volumeUp: "Громче"
 	}
 };
+function commandLabel(lang, command) {
+	if (command.type === "setVolume") return lang === "ru" ? `Громкость ${command.level}` : `Volume ${command.level}`;
+	return COMMAND_LABELS[lang][command.type];
+}
 function normalize(transcript) {
 	return transcript.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 }
 function includesPhrase(text, phrase) {
 	return text === phrase || ` ${text} `.includes(` ${phrase} `);
 }
+function parseSetVolume(normalized) {
+	const match = normalized.match(VOLUME_SET_RE);
+	if (!match) return null;
+	return {
+		type: "setVolume",
+		level: Math.min(100, Math.max(0, Math.round(Number(match[1]))))
+	};
+}
 function parseCommand(transcript) {
 	const normalized = normalize(transcript);
 	if (!normalized) return null;
-	for (const [command, phrases] of PHRASES) if (phrases.some((phrase) => includesPhrase(normalized, phrase))) return command;
+	const setVolume = parseSetVolume(normalized);
+	if (setVolume) return setVolume;
+	for (const [command, phrases] of PHRASES) if (phrases.some((phrase) => includesPhrase(normalized, phrase))) return { type: command };
 	return null;
+}
+//#endregion
+//#region src/feedback.ts
+var SUCCESS_HZ = 880;
+var ALREADY_HZ = 440;
+var SUCCESS_MS = 80;
+var ALREADY_MS = 50;
+var context;
+function getContext() {
+	context ??= new AudioContext();
+	return context;
+}
+function resumeFeedback() {
+	getContext().resume();
+}
+function playTick(frequency, durationMs) {
+	const ctx = getContext();
+	if (ctx.state === "suspended") return;
+	const oscillator = ctx.createOscillator();
+	const gain = ctx.createGain();
+	const now = ctx.currentTime;
+	const end = now + durationMs / 1e3;
+	oscillator.type = "sine";
+	oscillator.frequency.value = frequency;
+	gain.gain.setValueAtTime(.12, now);
+	gain.gain.exponentialRampToValueAtTime(.001, end);
+	oscillator.connect(gain);
+	gain.connect(ctx.destination);
+	oscillator.start(now);
+	oscillator.stop(end);
+}
+function playLikeFeedback(already) {
+	if (already) {
+		playTick(ALREADY_HZ, ALREADY_MS);
+		return;
+	}
+	playTick(SUCCESS_HZ, SUCCESS_MS);
 }
 //#endregion
 //#region src/hud.ts
@@ -313,11 +382,11 @@ function readSliderValue(slider) {
 	const fromAttr = Number(slider.getAttribute("aria-valuenow") ?? slider.getAttribute("value"));
 	return Number.isFinite(fromAttr) ? fromAttr : 50;
 }
-function adjustVolume(delta) {
+function writeVolume(level) {
+	const next = Math.min(100, Math.max(0, Math.round(level)));
 	const slider = selectVolumeSlider();
 	const video = selectVideo();
 	if (slider) {
-		const next = Math.min(100, Math.max(0, readSliderValue(slider) + delta));
 		slider.value = next;
 		slider.setAttribute("value", String(next));
 		slider.setAttribute("aria-valuenow", String(next));
@@ -326,30 +395,75 @@ function adjustVolume(delta) {
 		return true;
 	}
 	if (!video) return false;
-	video.volume = Math.min(1, Math.max(0, video.volume + delta / 100));
+	video.volume = next / 100;
 	if (video.volume > 0) video.muted = false;
 	return true;
 }
+function adjustVolume(delta) {
+	const slider = selectVolumeSlider();
+	if (slider) return writeVolume(readSliderValue(slider) + delta);
+	const video = selectVideo();
+	if (!video) return false;
+	return writeVolume(video.volume * 100 + delta);
+}
+function selectLikeRenderer() {
+	return selectPlayerBar()?.querySelector("ytmusic-like-button-renderer") ?? document.querySelector("ytmusic-like-button-renderer");
+}
+function isLiked(renderer) {
+	return (renderer.getAttribute("like-status") ?? renderer.likeStatus ?? "").toUpperCase() === "LIKE";
+}
+function like() {
+	const renderer = selectLikeRenderer();
+	if (!renderer) return { ok: false };
+	if (isLiked(renderer)) return {
+		already: true,
+		ok: true
+	};
+	const scopes = [renderer];
+	const bar = selectPlayerBar();
+	if (bar) scopes.push(bar);
+	scopes.push(document);
+	for (const scope of scopes) for (const selector of [
+		"#button-shape-like button",
+		"#like-button button",
+		"#like-button"
+	]) {
+		const el = scope.querySelector(selector);
+		if (!el) continue;
+		clickHost(el);
+		return { ok: true };
+	}
+	return { ok: false };
+}
 function applyCommand(command) {
-	switch (command) {
-		case "next": return clickFirst([
+	switch (command.type) {
+		case "like": return like();
+		case "next": return { ok: clickFirst([
 			".next-button",
 			"[aria-label=\"Next\"]",
 			"[title=\"Next\"]"
-		]);
-		case "pause": return pause();
-		case "play": return play();
-		case "prev": return clickFirst([
+		]) };
+		case "pause": return { ok: pause() };
+		case "play": return { ok: play() };
+		case "prev": return { ok: clickFirst([
 			".previous-button",
 			"[aria-label=\"Previous\"]",
 			"[title=\"Previous\"]"
-		]);
-		case "volumeDown": return adjustVolume(-10);
-		case "volumeUp": return adjustVolume(VOLUME_STEP);
+		]) };
+		case "setVolume": return { ok: writeVolume(command.level) };
+		case "volumeDown": return { ok: adjustVolume(-10) };
+		case "volumeUp": return { ok: adjustVolume(VOLUME_STEP) };
 	}
 }
 //#endregion
 //#region src/speech.ts
+var RESTART_DELAY_MS = 200;
+var WATCHDOG_MS = 12e3;
+var SOFT_RESTART_ERRORS = /* @__PURE__ */ new Set([
+	"aborted",
+	"network",
+	"no-speech"
+]);
 function defaultSpeechLang() {
 	return navigator.language.toLowerCase().startsWith("ru") ? "ru-RU" : "en-US";
 }
@@ -359,77 +473,142 @@ function getSpeechRecognition() {
 }
 var isSpeechSupported = () => Boolean(getSpeechRecognition());
 function createSpeechController({ lang = defaultSpeechLang(), onError, onListeningChange, onResult }) {
-	const SpeechRecognitionAPI = getSpeechRecognition();
-	if (!SpeechRecognitionAPI) throw new Error("SpeechRecognition is not supported");
-	const recognition = new SpeechRecognitionAPI();
-	recognition.lang = lang;
-	recognition.continuous = true;
-	recognition.interimResults = false;
-	recognition.maxAlternatives = 1;
+	const maybeRecognition = getSpeechRecognition();
+	if (!maybeRecognition) throw new Error("SpeechRecognition is not supported");
+	const SpeechRecognitionAPI = maybeRecognition;
+	let currentLang = lang;
 	let wanted = false;
+	let generation = 0;
+	let recognition;
 	let restartTimer = 0;
-	const clearRestart = () => {
+	let watchdogTimer = 0;
+	function clearRestart() {
 		window.clearTimeout(restartTimer);
 		restartTimer = 0;
-	};
-	const startRecognition = () => {
+	}
+	function clearWatchdog() {
+		window.clearTimeout(watchdogTimer);
+		watchdogTimer = 0;
+	}
+	function clearTimers() {
+		clearRestart();
+		clearWatchdog();
+	}
+	function pokeWatchdog() {
+		if (!wanted) return;
+		clearWatchdog();
+		watchdogTimer = window.setTimeout(() => {
+			if (!wanted) return;
+			recreateAndStart();
+		}, WATCHDOG_MS);
+	}
+	function killRecognition() {
+		const dying = recognition;
+		recognition = void 0;
+		if (!dying) return;
 		try {
-			recognition.start();
+			if (dying.abort) dying.abort();
+			else dying.stop();
 		} catch {}
-	};
-	recognition.onresult = (event) => {
-		for (let index = event.resultIndex; index < event.results.length; index++) {
-			const result = event.results[index];
-			if (!result?.isFinal) continue;
-			const transcript = result[0]?.transcript.trim();
-			if (transcript) onResult(transcript);
-		}
-	};
-	recognition.onerror = (event) => {
-		if (event.error === "no-speech" || event.error === "aborted") return;
-		if (event.error === "not-allowed") {
-			wanted = false;
-			clearRestart();
-			onListeningChange(false);
-			onError("Microphone permission denied");
-			return;
-		}
-		onError(event.error);
-	};
-	recognition.onend = () => {
-		if (!wanted) {
-			onListeningChange(false);
-			return;
-		}
+	}
+	function createRecognition() {
+		const instance = new SpeechRecognitionAPI();
+		instance.lang = currentLang;
+		instance.continuous = true;
+		instance.interimResults = false;
+		instance.maxAlternatives = 1;
+		return instance;
+	}
+	function startRecognition(instance) {
+		try {
+			instance.start();
+		} catch {}
+	}
+	function scheduleRestart() {
+		if (!wanted) return;
 		clearRestart();
 		restartTimer = window.setTimeout(() => {
 			if (!wanted) return;
-			startRecognition();
-		}, 200);
-	};
+			recreateAndStart();
+		}, RESTART_DELAY_MS);
+	}
+	function bind(instance, gen) {
+		const ifCurrent = (action) => {
+			if (gen !== generation) return;
+			action();
+		};
+		instance.onaudiostart = () => ifCurrent(() => pokeWatchdog());
+		instance.onsoundstart = () => ifCurrent(() => pokeWatchdog());
+		instance.onresult = (event) => ifCurrent(() => {
+			pokeWatchdog();
+			for (let index = event.resultIndex; index < event.results.length; index++) {
+				const result = event.results[index];
+				if (!result?.isFinal) continue;
+				const transcript = result[0]?.transcript.trim();
+				if (transcript) onResult(transcript);
+			}
+		});
+		instance.onerror = (event) => ifCurrent(() => {
+			if (event.error === "not-allowed") {
+				wanted = false;
+				clearTimers();
+				onListeningChange(false);
+				onError("Microphone permission denied");
+				return;
+			}
+			if (SOFT_RESTART_ERRORS.has(event.error)) {
+				scheduleRestart();
+				return;
+			}
+			onError(event.error);
+		});
+		instance.onend = () => ifCurrent(() => {
+			if (wanted) {
+				scheduleRestart();
+				return;
+			}
+			onListeningChange(false);
+		});
+	}
+	function recreateAndStart() {
+		generation++;
+		const gen = generation;
+		clearTimers();
+		killRecognition();
+		const instance = createRecognition();
+		bind(instance, gen);
+		recognition = instance;
+		startRecognition(instance);
+		pokeWatchdog();
+	}
+	function onVisibilityChange() {
+		if (document.visibilityState !== "visible" || !wanted) return;
+		recreateAndStart();
+	}
+	document.addEventListener("visibilitychange", onVisibilityChange);
 	return {
 		get lang() {
-			return recognition.lang;
+			return currentLang;
 		},
 		get listening() {
 			return wanted;
 		},
 		setLang: (next) => {
-			if (recognition.lang === next) return;
-			recognition.lang = next;
+			if (currentLang === next) return;
+			currentLang = next;
 			if (!wanted) return;
-			clearRestart();
-			recognition.stop();
+			recreateAndStart();
 		},
 		start: () => {
 			wanted = true;
 			onListeningChange(true);
-			startRecognition();
+			recreateAndStart();
 		},
 		stop: () => {
 			wanted = false;
-			clearRestart();
-			recognition.stop();
+			generation++;
+			clearTimers();
+			killRecognition();
 			onListeningChange(false);
 		}
 	};
@@ -455,6 +634,7 @@ function bootstrap() {
 				speech.stop();
 				return;
 			}
+			resumeFeedback();
 			speech.start();
 		}
 	});
@@ -474,15 +654,22 @@ function bootstrap() {
 			hud.setStatus(listening ? "listening" : "idle");
 		},
 		onResult: (transcript) => {
-			const labels = COMMAND_LABELS[uiLang(lang)];
 			const command = parseCommand(transcript);
 			if (!command) {
 				hud.showToast(lang === "ru-RU" ? `Слышу: ${transcript}` : `Heard: ${transcript}`);
 				return;
 			}
-			const ok = applyCommand(command);
-			const label = labels[command];
-			if (ok) {
+			const result = applyCommand(command);
+			const label = commandLabel(uiLang(lang), command);
+			if (command.type === "like") {
+				if (result.ok) {
+					playLikeFeedback(Boolean(result.already));
+					return;
+				}
+				hud.showToast(lang === "ru-RU" ? `Не вышло: ${label}` : `Failed: ${label}`);
+				return;
+			}
+			if (result.ok) {
 				hud.showToast(label);
 				return;
 			}

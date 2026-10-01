@@ -155,6 +155,44 @@ function isLiked(renderer: LikeRenderer) {
   return status === 'LIKE'
 }
 
+type RepeatMode = 'all' | 'off' | 'one' | 'unknown'
+
+function selectRepeatButton() {
+  return selectPlayerBar()?.querySelector<HTMLElement>('.repeat') ?? null
+}
+
+function controlLabel(el: HTMLElement) {
+  const inner = el.querySelector('button')
+  return [
+    el.getAttribute('title'),
+    el.getAttribute('aria-label'),
+    inner?.getAttribute('title'),
+    inner?.getAttribute('aria-label'),
+  ].filter((part): part is string => Boolean(part)).join(' ').toLowerCase()
+}
+
+function repeatMode(label: string): RepeatMode {
+  if (/\bone\b|single|один|одн/.test(label)) return 'one'
+  if (/\ball\b|queue|playlist|всех|(?:^|\s)все(?:\s|$)|плейлист|очеред/.test(label)) return 'all'
+  if (/\boff\b|\bnone\b|disabled|выкл|отключ|без повтор/.test(label)) return 'off'
+  return 'unknown'
+}
+
+function setRepeat(target: Exclude<RepeatMode, 'unknown'>): ApplyResult {
+  const button = selectRepeatButton()
+  if (!button) return { ok: false }
+
+  const mode = () => repeatMode(controlLabel(button))
+  if (mode() === target) return { already: true, ok: true }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    clickHost(button)
+    if (mode() === target) return { ok: true }
+  }
+
+  return { ok: false }
+}
+
 function like(): ApplyResult {
   const renderer = selectLikeRenderer()
   if (!renderer) return { ok: false }
@@ -189,6 +227,10 @@ export function applyCommand(command: ParsedCommand): ApplyResult {
       return { ok: play() }
     case 'prev':
       return { ok: clickFirst(['.previous-button', '[aria-label="Previous"]', '[title="Previous"]']) }
+    case 'repeatOff':
+      return setRepeat('off')
+    case 'repeatOne':
+      return setRepeat('one')
     case 'setVolume':
       return { ok: writeVolume(command.level) }
     case 'volumeDown':

@@ -21,6 +21,8 @@ English and Russian voice commands on [YouTube Music](https://music.youtube.com)
 | `volume down`, `quieter`, `turn it down` | Volume -10 |
 | `volume 50`, `volume to 80` | Set volume 0–100 |
 | `like`, `like this`, `favorite` | Like current track if not liked (unlike by hand only) |
+| `repeat one`, `repeat track`, `loop` | Repeat the current track (no-op if already on) |
+| `repeat off`, `turn repeat off`, `stop repeat` | Turn repeat off (no-op if already off) |
 
 ## Russian commands
 
@@ -34,3 +36,5 @@ English and Russian voice commands on [YouTube Music](https://music.youtube.com)
 | `тише`, `потише`, `убавь` | Громкость −10 |
 | `громкость 32`, `звук 50` | Выставить уровень 0–100 |
 | `лайк`, `нравится`, `в избранное` | Лайк, если ещё нет (снять только руками) |
+| `поставь трек на репит`, `повтор`, `зацикли` | Повтор текущего трека (если уже включён — ничего) |
+| `выключи повтор`, `отключи репит`, `без повтора` | Выключить повтор (если уже выключен — ничего) |

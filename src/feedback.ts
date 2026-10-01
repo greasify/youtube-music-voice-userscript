@@ -14,13 +14,13 @@ export function resumeFeedback() {
   void getContext().resume()
 }
 
-function playTick(frequency: number, durationMs: number) {
+function playTick(frequency: number, durationMs: number, delayMs = 0) {
   const ctx = getContext()
   if (ctx.state === 'suspended') return
 
   const oscillator = ctx.createOscillator()
   const gain = ctx.createGain()
-  const now = ctx.currentTime
+  const now = ctx.currentTime + delayMs / 1000
   const end = now + durationMs / 1000
 
   oscillator.type = 'sine'
@@ -40,4 +40,24 @@ export function playLikeFeedback(already: boolean) {
   }
 
   playTick(SUCCESS_HZ, SUCCESS_MS)
+}
+
+const REPEAT_NOTE_MS = 70
+const REPEAT_SECOND_MS = 90
+const REPEAT_GAP_MS = 80
+
+export function playRepeatFeedback(enabled: boolean, already: boolean) {
+  if (already) {
+    playTick(enabled ? 784 : 392, ALREADY_MS)
+    return
+  }
+
+  if (enabled) {
+    playTick(523, REPEAT_NOTE_MS)
+    playTick(784, REPEAT_SECOND_MS, REPEAT_GAP_MS)
+    return
+  }
+
+  playTick(784, REPEAT_NOTE_MS)
+  playTick(392, REPEAT_SECOND_MS, REPEAT_GAP_MS)
 }

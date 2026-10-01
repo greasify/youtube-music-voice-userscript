@@ -1,6 +1,6 @@
 import type { SpeechController, SpeechLang } from './speech'
 import { commandLabel, parseCommand } from './commands'
-import { playLikeFeedback, resumeFeedback } from './feedback'
+import { playLikeFeedback, playRepeatFeedback, resumeFeedback } from './feedback'
 import { createHud, mountHud } from './hud'
 import { applyCommand } from './player'
 import {
@@ -77,6 +77,9 @@ function bootstrap() {
       }
 
       if (result.ok) {
+        if (command.type === 'repeatOne' || command.type === 'repeatOff') {
+          playRepeatFeedback(command.type === 'repeatOne', Boolean(result.already))
+        }
         hud.showToast(label)
         return
       }

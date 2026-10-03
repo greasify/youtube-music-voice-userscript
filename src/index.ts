@@ -1,95 +1,109 @@
-import type { SpeechController, SpeechLang } from './speech'
-import { commandLabel, parseCommand } from './commands'
+import type { BridgeSession, RemoteCommand } from './bridge'
+import type { ParsedCommand } from './commands'
+import type { ApplyResult } from './player'
+import { createCommandBridge } from './bridge'
+import { commandLabel } from './commands'
 import { playLikeFeedback, playRepeatFeedback, resumeFeedback } from './feedback'
 import { createHud, mountHud } from './hud'
 import { applyCommand } from './player'
-import {
-  createSpeechController,
-  defaultSpeechLang,
-  isSpeechSupported,
-} from './speech'
 import './style.scss'
 
-function uiLang(lang: SpeechLang) {
-  return lang === 'ru-RU' ? 'ru' : 'en'
+const APPLY_ATTEMPTS = 10
+const APPLY_GAP_MS = 300
+
+function uiLang() {
+  return navigator.language.toLowerCase().startsWith('ru') ? 'ru' as const : 'en' as const
+}
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
+}
+
+function readSession(): BridgeSession {
+  const video = document.querySelector('video')
+  return {
+    hasPlayer: Boolean(document.querySelector('ytmusic-player-bar')),
+    href: location.href,
+    playing: Boolean(video && !video.paused && !video.ended),
+    visibility: document.visibilityState === 'visible' ? 'visible' : 'hidden',
+  }
+}
+
+function toParsed(command: RemoteCommand): ParsedCommand | null {
+  if (command.name === 'setVolume') {
+    if (typeof command.level !== 'number') return null
+    return { type: 'setVolume', level: command.level }
+  }
+
+  return { type: command.name }
+}
+
+async function applyWithRetry(command: ParsedCommand): Promise<ApplyResult> {
+  let result: ApplyResult = { ok: false }
+
+  for (let attempt = 0; attempt < APPLY_ATTEMPTS; attempt++) {
+    result = applyCommand(command)
+    if (result.ok) return result
+    await delay(APPLY_GAP_MS)
+  }
+
+  return result
 }
 
 function bootstrap() {
-  let speech: SpeechController | undefined
-  let lang = defaultSpeechLang()
-
-  const hud = createHud({
-    lang,
-    onLangChange: (next) => {
-      lang = next
-      hud.setLang(next)
-      speech?.setLang(next)
-    },
-    onToggle: () => {
-      if (!speech) return
-      if (speech.listening) {
-        speech.stop()
-        return
-      }
-      resumeFeedback()
-      speech.start()
-    },
-  })
-
+  const hud = createHud()
   mountHud(hud.root)
 
-  if (!isSpeechSupported()) {
-    hud.setStatus('error')
-    hud.showToast(lang === 'ru-RU' ? 'SpeechRecognition не поддерживается' : 'SpeechRecognition is not supported')
-    return
+  const unlock = () => {
+    resumeFeedback()
+    window.removeEventListener('pointerdown', unlock)
   }
+  window.addEventListener('pointerdown', unlock)
 
-  speech = createSpeechController({
-    lang,
-    onError: (message) => {
-      hud.setStatus('error')
-      hud.showToast(
-        lang === 'ru-RU' && message === 'Microphone permission denied'
-          ? 'Нет доступа к микрофону'
-          : message,
-      )
-    },
-    onListeningChange: (listening) => {
-      hud.setStatus(listening ? 'listening' : 'idle')
-    },
-    onResult: (transcript) => {
-      const command = parseCommand(transcript)
-      if (!command) {
-        hud.showToast(lang === 'ru-RU' ? `Слышу: ${transcript}` : `Heard: ${transcript}`)
-        return
+  const bridge = createCommandBridge({
+    onCommand: async (command) => {
+      const parsed = toParsed(command)
+      const lang = uiLang()
+      if (!parsed) {
+        hud.showToast(lang === 'ru' ? 'Неизвестная команда' : 'Unknown command')
+        return { ok: false }
       }
 
-      const result = applyCommand(command)
-      const label = commandLabel(uiLang(lang), command)
+      const result = await applyWithRetry(parsed)
+      const label = commandLabel(lang, parsed)
 
-      if (command.type === 'like') {
+      if (parsed.type === 'like') {
         if (result.ok) {
           playLikeFeedback(Boolean(result.already))
-          return
+          return result
         }
-        hud.showToast(lang === 'ru-RU' ? `Не вышло: ${label}` : `Failed: ${label}`)
-        return
+        hud.showToast(lang === 'ru' ? `Не вышло: ${label}` : `Failed: ${label}`)
+        return result
       }
 
       if (result.ok) {
-        if (command.type === 'repeatOne' || command.type === 'repeatOff') {
-          playRepeatFeedback(command.type === 'repeatOne', Boolean(result.already))
+        if (parsed.type === 'repeatOne' || parsed.type === 'repeatOff') {
+          playRepeatFeedback(parsed.type === 'repeatOne', Boolean(result.already))
         }
         hud.showToast(label)
-        return
+        return result
       }
-      hud.showToast(lang === 'ru-RU' ? `Не вышло: ${label}` : `Failed: ${label}`)
+
+      hud.showToast(lang === 'ru' ? `Не вышло: ${label}` : `Failed: ${label}`)
+      return result
     },
+    onStatus: connected => hud.setStatus(connected ? 'connected' : 'disconnected'),
+    session: readSession,
   })
+
+  document.addEventListener('visibilitychange', () => {
+    bridge.update(readSession())
+  })
+
+  bridge.start()
 }
 
-if (document.body) {
-  bootstrap()
-} else {
-  document.addEventListener('DOMContentLoaded', bootstrap, { once: true })
-}
+if (document.body) bootstrap()
+else document.addEventListener('DOMContentLoaded', bootstrap, { once: true })

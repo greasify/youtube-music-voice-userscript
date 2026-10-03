@@ -1,96 +1,49 @@
-import type { SpeechLang } from './speech'
-
-export type HudStatus = 'error' | 'idle' | 'listening'
+export type HudStatus = 'connected' | 'disconnected'
 
 export type Hud = {
   root: HTMLElement
-  setLang: (lang: SpeechLang) => void
   setStatus: (status: HudStatus) => void
   showToast: (text: string) => void
 }
 
-export type HudOptions = {
-  lang: SpeechLang
-  onLangChange: (lang: SpeechLang) => void
-  onToggle: () => void
-}
+type HudLang = 'en' | 'ru'
 
-const STATUS_LABEL: Record<SpeechLang, Record<HudStatus, string>> = {
-  'en-US': {
-    error: 'Mic error',
-    idle: 'Voice',
-    listening: 'Listening',
+const STATUS_LABEL: Record<HudLang, Record<HudStatus, string>> = {
+  en: {
+    connected: 'Voice',
+    disconnected: 'No service',
   },
-  'ru-RU': {
-    error: 'Ошибка',
-    idle: 'Голос',
-    listening: 'Слушаю',
+  ru: {
+    connected: 'Голос',
+    disconnected: 'Нет сервиса',
   },
 }
 
-const TOGGLE_LABEL: Record<SpeechLang, string> = {
-  'en-US': 'Toggle voice control',
-  'ru-RU': 'Голосовое управление',
-}
-
-export function createHud({ lang, onLangChange, onToggle }: HudOptions): Hud {
-  let currentLang = lang
-  let currentStatus: HudStatus = 'idle'
+export function createHud(): Hud {
+  const lang: HudLang = navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en'
+  let currentStatus: HudStatus = 'disconnected'
 
   const root = document.createElement('div')
   root.className = 'ymv-root'
 
-  const row = document.createElement('div')
-  row.className = 'ymv-row'
-
-  const button = document.createElement('button')
-  button.type = 'button'
-  button.className = 'ymv-mic'
-
-  const langEn = document.createElement('button')
-  langEn.type = 'button'
-  langEn.className = 'ymv-lang'
-  langEn.dataset.lang = 'en-US'
-  langEn.textContent = 'EN'
-  langEn.setAttribute('aria-label', 'English')
-
-  const langRu = document.createElement('button')
-  langRu.type = 'button'
-  langRu.className = 'ymv-lang'
-  langRu.dataset.lang = 'ru-RU'
-  langRu.textContent = 'RU'
-  langRu.setAttribute('aria-label', 'Русский')
+  const status = document.createElement('div')
+  status.className = 'ymv-status'
 
   const toast = document.createElement('div')
   toast.className = 'ymv-toast'
   toast.setAttribute('aria-live', 'polite')
 
-  button.addEventListener('click', onToggle)
-  langEn.addEventListener('click', () => onLangChange('en-US'))
-  langRu.addEventListener('click', () => onLangChange('ru-RU'))
-
-  row.append(button, langEn, langRu)
-  root.append(row, toast)
+  root.append(status, toast)
 
   let toastTimer = 0
 
   const render = () => {
-    root.dataset.lang = currentLang
-    button.textContent = STATUS_LABEL[currentLang][currentStatus]
-    button.setAttribute('aria-label', TOGGLE_LABEL[currentLang])
-    button.setAttribute('aria-pressed', currentStatus === 'listening' ? 'true' : 'false')
-    langEn.setAttribute('aria-pressed', currentLang === 'en-US' ? 'true' : 'false')
-    langRu.setAttribute('aria-pressed', currentLang === 'ru-RU' ? 'true' : 'false')
+    root.dataset.status = currentStatus
+    status.textContent = STATUS_LABEL[lang][currentStatus]
   }
 
-  const setStatus = (status: HudStatus) => {
-    currentStatus = status
-    root.dataset.status = status
-    render()
-  }
-
-  const setLang = (next: SpeechLang) => {
-    currentLang = next
+  const setStatus = (next: HudStatus) => {
+    currentStatus = next
     render()
   }
 
@@ -103,9 +56,9 @@ export function createHud({ lang, onLangChange, onToggle }: HudOptions): Hud {
     }, 1800)
   }
 
-  setStatus('idle')
+  render()
 
-  return { root, setLang, setStatus, showToast }
+  return { root, setStatus, showToast }
 }
 
 export function mountHud(node: HTMLElement) {

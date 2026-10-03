@@ -10,8 +10,9 @@ export default defineConfig({
       header: {
         name: pkg.name,
         version: pkg.version,
-        description: 'Voice control for YouTube Music: next, previous, pause, play, volume.',
+        description: 'Runs YouTube Music voice commands sent by the macOS menu bar app.',
         homepage: 'https://greasify.github.io/youtube-music-voice-userscript/',
+        connect: '127.0.0.1',
         match: 'https://music.youtube.com/*',
         noframes: true,
       },

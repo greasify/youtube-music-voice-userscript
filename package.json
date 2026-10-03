@@ -12,7 +12,8 @@
     "build": "pnpm type-check && vite build",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint . --cache",
-    "lint:fix": "eslint . --fix --cache"
+    "lint:fix": "eslint . --fix --cache",
+    "app:build": "macos/package-app.sh"
   },
   "devDependencies": {
     "@antfu/eslint-config": "9.5.1",
